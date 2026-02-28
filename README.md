@@ -1,4 +1,4 @@
-# SudipRo -  MERN Portfolio 🚀
+# SudipRo - Enterprise MERN SaaS Portfolio 🚀
 
 A high-converting, production-ready SaaS portfolio built with the MERN stack (MongoDB, Express, React, Node.js) and AI integrations. Designed specifically to convert visitors into high-paying clients through interactive core revenue systems.
 

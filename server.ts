@@ -18,7 +18,7 @@ async function startServer() {
   app.set("trust proxy", 1);
 
   // Connect to MongoDB
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://sudipro:sudipro9813%40%23%24@cluster0.h5be6xs.mongodb.net/?appName=Cluster0';
+  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://sudipro:sudipro9813%40%23%24@cluster0.h5be6xs.mongodb.net/portfolio?retryWrites=true&w=majority';
   let isDbConnected = false;
   
   try {
