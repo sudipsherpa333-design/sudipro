@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const contactSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
+  whatsapp: { type: String, required: false },
   projectType: { type: String, required: true },
   budget: { type: String, required: true },
   message: { type: String, required: true },

@@ -51,7 +51,7 @@ async function startServer() {
 
   // Fallback middleware if DB is not connected
   app.use("/api", (req, res, next) => {
-    if (!isDbConnected) {
+    if (!isDbConnected && !req.path.includes('/contact')) {
       return res.status(503).json({ success: false, message: 'Database connection failed. Please try again later.' });
     }
     next();

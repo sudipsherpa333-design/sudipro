@@ -13,13 +13,38 @@ interface Project {
   githubUrl: string;
 }
 
+const MOCK_PROJECTS: Project[] = [
+  {
+    _id: "1",
+    title: "AI Resume Analyzer",
+    description: "An AI-powered tool that analyzes resumes for ATS compatibility and provides actionable feedback.",
+    metrics: "92% ATS Pass Rate",
+    tech: ["React", "Node.js", "Gemini AI", "Tailwind"],
+    demoUrl: "#",
+    githubUrl: "#",
+  },
+  {
+    _id: "2",
+    title: "E-Commerce Platform",
+    description: "A full-stack e-commerce platform with real-time inventory, Stripe payments, and admin dashboard.",
+    metrics: "$10k+ Monthly Revenue",
+    tech: ["Next.js", "MongoDB", "Stripe", "Redux"],
+    demoUrl: "#",
+    githubUrl: "#",
+  }
+];
+
 export default function Projects() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   useEffect(() => {
     fetch("/api/projects")
       .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          throw new Error(`HTTP error! status: ${res.status}, body: ${text.substring(0, 100)}`);
+        }
         const contentType = res.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
           return res.json();
@@ -29,16 +54,17 @@ export default function Projects() {
         }
       })
       .then((data) => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           setProjects(data);
+        } else if (Array.isArray(data) && data.length === 0) {
+          // Keep mock data if API returns empty array (e.g. fresh database)
+          console.log("API returned empty projects, using mock data");
         } else {
           console.error("Expected array of projects, got:", data);
-          setProjects([]);
         }
       })
       .catch((err) => {
-        console.error("Error fetching projects:", err);
-        setProjects([]);
+        console.error("Error fetching projects, falling back to mock data:", err);
       });
   }, []);
 

@@ -80,8 +80,15 @@ router.get('/blogs/:slug', async (req, res) => {
 
 router.post('/contact', async (req, res) => {
   try {
-    const contact = new Contact(req.body);
-    await contact.save();
+    let contact;
+    try {
+      contact = new Contact(req.body);
+      await contact.save();
+    } catch (dbErr) {
+      console.warn("Failed to save contact to DB, but will proceed with email:", dbErr);
+      // Fallback to req.body if DB save fails so we still have the data for the email
+      contact = req.body;
+    }
 
     try {
       if (process.env.SMTP_USER && process.env.SMTP_PASS) {
@@ -99,15 +106,16 @@ router.post('/contact', async (req, res) => {
           from: `"Portfolio Contact" <${process.env.SMTP_USER}>`,
           to: process.env.EMAIL_TO || process.env.SMTP_USER,
           subject: `New Contact from ${contact.name}`,
-          text: `Name: ${contact.name}\nEmail: ${contact.email}\nProject Type: ${contact.projectType}\nBudget: ${contact.budget}\n\nMessage:\n${contact.message}`,
+          text: `Name: ${contact.name}\nEmail: ${contact.email}\nWhatsApp: ${contact.whatsapp || 'N/A'}\nProject Type: ${contact.projectType}\nBudget: ${contact.budget}\n\nMessage:\n${contact.message || ''}`,
           html: `
             <h3>New Contact Submission</h3>
             <p><strong>Name:</strong> ${contact.name}</p>
             <p><strong>Email:</strong> ${contact.email}</p>
+            <p><strong>WhatsApp:</strong> ${contact.whatsapp || 'N/A'}</p>
             <p><strong>Project Type:</strong> ${contact.projectType}</p>
             <p><strong>Budget:</strong> ${contact.budget}</p>
             <p><strong>Message:</strong></p>
-            <p>${contact.message.replace(/\n/g, '<br>')}</p>
+            <p>${(contact.message || '').replace(/\n/g, '<br>')}</p>
           `
         });
         console.log("Email notification sent successfully.");

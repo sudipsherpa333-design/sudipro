@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
   Send,
   CheckCircle,
@@ -11,48 +14,68 @@ import {
   Mail,
   Briefcase,
   DollarSign,
-  FileText
+  FileText,
+  ArrowRight
 } from "lucide-react";
 
+const formSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  whatsapp: z.string().optional(),
+  projectType: z.string(),
+  budget: z.string(),
+  message: z.string().min(10, "Please provide more details about your project"),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
 export default function Contact() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    projectType: "Fullstack",
-    budget: "< $1k",
-    message: "",
-  });
-  const [status, setStatus] = useState<
-    "idle" | "loading" | "success" | "error"
-  >("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [responseMsg, setResponseMsg] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      whatsapp: "",
+      projectType: "Fullstack",
+      budget: "< $1k",
+      message: "",
+    },
+  });
+
+  const onSubmit = async (data: FormData) => {
     setStatus("loading");
 
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get("content-type");
+      let responseData;
+      if (contentType && contentType.includes("application/json")) {
+        responseData = await res.json();
+      } else {
+        throw new Error("Received non-JSON response from server");
+      }
 
       if (res.ok) {
         setStatus("success");
-        setResponseMsg(data.message);
-        setFormData({
-          name: "",
-          email: "",
-          projectType: "Fullstack",
-          budget: "< $1k",
-          message: "",
-        });
+        setResponseMsg(responseData.message || "Message sent successfully!");
+        reset();
+        setTimeout(() => setStatus("idle"), 5000);
       } else {
         setStatus("error");
-        setResponseMsg(data.message || "Something went wrong.");
+        setResponseMsg(responseData.message || "Something went wrong.");
       }
     } catch (err) {
       setStatus("error");
@@ -60,276 +83,238 @@ export default function Contact() {
     }
   };
 
+  const inputClasses = "block w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-gray-500 hover:bg-white/10 relative z-20";
+  const labelClasses = "block text-sm font-medium text-gray-400 mb-2 ml-1 relative z-20";
+  const iconClasses = "absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-accent transition-colors z-30";
+  const errorClasses = "text-red-400 text-xs mt-1 ml-1 absolute -bottom-5 left-0";
+
   return (
-    <section id="contact" className="py-32 px-4 bg-dark-surface relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
+    <section id="contact" className="py-32 px-4 bg-dark-bg relative overflow-hidden">
+      {/* Advanced Background Effects */}
+      <div className="absolute top-1/4 left-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+          
+          {/* Left Column: Info */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
+            className="lg:col-span-5 sticky top-32"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-              Let's <span className="text-accent">Connect</span>
+            <div className="inline-flex items-center mb-6 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-gray-300 text-sm font-mono tracking-widest uppercase">
+              <span className="w-2 h-2 rounded-full bg-accent mr-3 animate-pulse"></span>
+              Available for work
+            </div>
+            
+            <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tighter leading-tight">
+              Let's build <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-blue-500">together.</span>
             </h2>
-            <p className="text-gray-400 text-lg mb-12 max-w-md">
-              Ready to build your next AI-powered MERN application? Let's
-              discuss your project requirements.
+            
+            <p className="text-gray-400 text-lg mb-12 max-w-md leading-relaxed">
+              Ready to transform your ideas into a high-performance MERN application? Drop me a message and let's discuss your vision.
             </p>
 
-            <div className="space-y-8 mb-12">
-              <div className="flex items-center space-x-4 group">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-accent group-hover:bg-accent/10 group-hover:border-accent/30 transition-all duration-300">
-                  <MessageSquare size={24} />
-                </div>
-                <div>
-                  <h4 className="text-sm text-gray-400 font-mono mb-1 uppercase tracking-wider">
-                    Email
-                  </h4>
-                  <a
-                    href="mailto:sudipsherpa999@gmail.com"
-                    className="text-lg font-medium hover:text-accent transition-colors"
-                  >
-                    sudipsherpa999@gmail.com
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4 group">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-accent group-hover:bg-accent/10 group-hover:border-accent/30 transition-all duration-300">
-                  <Phone size={24} />
-                </div>
-                <div>
-                  <h4 className="text-sm text-gray-400 font-mono mb-1 uppercase tracking-wider">
-                    WhatsApp / Telegram
-                  </h4>
-                  <a
-                    href="#"
-                    className="text-lg font-medium hover:text-accent transition-colors"
-                  >
-                    +977 9800000000
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4 group">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-accent group-hover:bg-accent/10 group-hover:border-accent/30 transition-all duration-300">
-                  <MapPin size={24} />
-                </div>
-                <div>
-                  <h4 className="text-sm text-gray-400 font-mono mb-1 uppercase tracking-wider">
-                    Location
-                  </h4>
-                  <p className="text-lg font-medium">Kathmandu, Nepal</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4 group">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-accent group-hover:bg-accent/10 group-hover:border-accent/30 transition-all duration-300">
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="text-sm text-gray-400 font-mono mb-1 uppercase tracking-wider">
-                    LinkedIn
-                  </h4>
-                  <a
-                    href="https://www.linkedin.com/feed/?shareActive=true&url=http%3A%2F%2Flocalhost%3A5174%2Fresume%2Fshare%2Fresume_1764766477706_5j5m4aoke&shareUrl=http%3A%2F%2Flocalhost%3A5174%2Fresume%2Fshare%2Fresume_1764766477706_5j5m4aoke&linkOrigin=LI_BADGE"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-lg font-medium hover:text-accent transition-colors"
-                  >
-                    Connect with me
-                  </a>
-                </div>
-              </div>
+            <div className="space-y-8">
+              {[
+                { icon: Mail, label: "Email", value: "sudipsherpa999@gmail.com", href: "mailto:sudipsherpa999@gmail.com" },
+                { icon: Phone, label: "WhatsApp", value: "+977 9813319831", href: "https://wa.me/9779813319831" },
+                { icon: MapPin, label: "Location", value: "Kathmandu, Nepal", href: null }
+              ].map((item, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 + (i * 0.1) }}
+                  className="flex items-center space-x-6 group"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 group-hover:text-accent group-hover:bg-accent/10 group-hover:border-accent/30 transition-all duration-500 shadow-lg">
+                    <item.icon size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm text-gray-500 font-mono mb-1 uppercase tracking-wider">
+                      {item.label}
+                    </h4>
+                    {item.href ? (
+                      <a href={item.href} target="_blank" rel="noopener noreferrer" className="text-xl font-medium text-white hover:text-accent transition-colors">
+                        {item.value}
+                      </a>
+                    ) : (
+                      <p className="text-xl font-medium text-white">{item.value}</p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
 
+          {/* Right Column: Form */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="glass p-8 md:p-10 rounded-3xl border border-white/10 shadow-2xl relative"
+            className="lg:col-span-7"
           >
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
-                      <User size={18} />
+            <div className="glass p-8 md:p-12 rounded-[2.5rem] border border-white/10 shadow-2xl relative overflow-hidden">
+              {/* Decorative glow inside the card */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-[80px] pointer-events-none" />
+              
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 relative z-10" data-lenis-prevent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-6">
+                  <div className="group relative">
+                    <label htmlFor="name" className={labelClasses}>Full Name <span className="text-accent">*</span></label>
+                    <div className="relative">
+                      <div className={iconClasses}><User size={18} /></div>
+                      <input 
+                        type="text" 
+                        id="name" 
+                        {...register("name")} 
+                        className={`${inputClasses} ${errors.name ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400' : ''}`} 
+                        placeholder="John Doe" 
+                      />
                     </div>
-                    <input
-                      type="text"
-                      id="name"
-                      required
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      className="w-full bg-dark-bg border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-gray-600"
-                      placeholder="John Doe"
+                    {errors.name && <span className={errorClasses}>{errors.name.message}</span>}
+                  </div>
+                  <div className="group relative">
+                    <label htmlFor="email" className={labelClasses}>Email Address <span className="text-accent">*</span></label>
+                    <div className="relative">
+                      <div className={iconClasses}><Mail size={18} /></div>
+                      <input 
+                        type="email" 
+                        id="email" 
+                        {...register("email")} 
+                        className={`${inputClasses} ${errors.email ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400' : ''}`} 
+                        placeholder="john@example.com" 
+                      />
+                    </div>
+                    {errors.email && <span className={errorClasses}>{errors.email.message}</span>}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-6">
+                  <div className="group relative">
+                    <label htmlFor="whatsapp" className={labelClasses}>WhatsApp (Optional)</label>
+                    <div className="relative">
+                      <div className={iconClasses}><Phone size={18} /></div>
+                      <input 
+                        type="tel" 
+                        id="whatsapp" 
+                        {...register("whatsapp")} 
+                        className={inputClasses} 
+                        placeholder="+977 9813319831" 
+                      />
+                    </div>
+                  </div>
+                  <div className="group relative">
+                    <label htmlFor="budget" className={labelClasses}>Budget Range</label>
+                    <div className="relative">
+                      <div className={iconClasses}><DollarSign size={18} /></div>
+                      <select 
+                        id="budget" 
+                        {...register("budget")} 
+                        className={`${inputClasses} appearance-none`}
+                      >
+                        <option value="< $1k" className="bg-dark-surface">&lt; $1,000</option>
+                        <option value="$1k - $5k" className="bg-dark-surface">$1,000 - $5,000</option>
+                        <option value="$5k - $10k" className="bg-dark-surface">$5,000 - $10,000</option>
+                        <option value="> $10k" className="bg-dark-surface">&gt; $10,000</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none text-gray-500 z-30">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="group relative">
+                  <label htmlFor="projectType" className={labelClasses}>Project Type</label>
+                  <div className="relative">
+                    <div className={iconClasses}><Briefcase size={18} /></div>
+                    <select 
+                      id="projectType" 
+                      {...register("projectType")} 
+                      className={`${inputClasses} appearance-none`}
+                    >
+                      <option value="Fullstack" className="bg-dark-surface">Fullstack MERN Application</option>
+                      <option value="AI Backend" className="bg-dark-surface">AI Integration / Backend</option>
+                      <option value="Job Portal" className="bg-dark-surface">Job Portal / SaaS</option>
+                      <option value="Other" className="bg-dark-surface">Other Custom Project</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none text-gray-500 z-30">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="group relative z-20">
+                  <label htmlFor="message" className={labelClasses}>Project Details <span className="text-accent">*</span></label>
+                  <div className="relative">
+                    <div className="absolute top-4 left-0 pl-4 flex items-start pointer-events-none text-gray-500 group-focus-within:text-accent transition-colors z-30">
+                      <FileText size={18} />
+                    </div>
+                    <textarea 
+                      id="message" 
+                      {...register("message")} 
+                      rows={4} 
+                      className={`${inputClasses} resize-none ${errors.message ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400' : ''}`} 
+                      placeholder="Tell me about your goals, timeline, and specific requirements..." 
                     />
                   </div>
+                  {errors.message && <span className={errorClasses}>{errors.message.message}</span>}
                 </div>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
-                      <Mail size={18} />
-                    </div>
-                    <input
-                      type="email"
-                      id="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      className="w-full bg-dark-bg border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-gray-600"
-                      placeholder="john@example.com"
-                    />
-                  </div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label
-                    htmlFor="projectType"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Project Type
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
-                      <Briefcase size={18} />
-                    </div>
-                    <select
-                      id="projectType"
-                      value={formData.projectType}
-                      onChange={(e) =>
-                        setFormData({ ...formData, projectType: e.target.value })
-                      }
-                      className="w-full bg-dark-bg border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all appearance-none"
+                <button
+                  type="submit"
+                  disabled={isSubmitting || status === "loading"}
+                  className="w-full py-5 rounded-2xl bg-white text-dark-bg font-bold hover:bg-accent transition-all flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed group/btn overflow-hidden relative mt-8"
+                >
+                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
+                  {isSubmitting || status === "loading" ? (
+                    <span className="flex items-center relative z-10">
+                      <div className="w-5 h-5 border-2 border-dark-bg border-t-transparent rounded-full animate-spin mr-3"></div>
+                      Processing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center relative z-10 text-lg">
+                      Send Message <ArrowRight size={20} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                    </span>
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {status === "success" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex items-center text-success bg-success/10 p-4 rounded-2xl border border-success/20 overflow-hidden mt-4"
                     >
-                      <option value="Job Portal">Job Portal</option>
-                      <option value="AI Backend">AI Backend</option>
-                      <option value="Fullstack">Fullstack MERN</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label
-                    htmlFor="budget"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Budget Range
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
-                      <DollarSign size={18} />
-                    </div>
-                    <select
-                      id="budget"
-                      value={formData.budget}
-                      onChange={(e) =>
-                        setFormData({ ...formData, budget: e.target.value })
-                      }
-                      className="w-full bg-dark-bg border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all appearance-none"
+                      <CheckCircle size={20} className="mr-3 flex-shrink-0" />
+                      <p className="text-sm font-medium">{responseMsg}</p>
+                    </motion.div>
+                  )}
+
+                  {status === "error" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex items-center text-red-400 bg-red-400/10 p-4 rounded-2xl border border-red-400/20 overflow-hidden mt-4"
                     >
-                      <option value="< $1k">&lt; $1,000</option>
-                      <option value="$1k - $5k">$1,000 - $5,000</option>
-                      <option value="$5k - $10k">$5,000 - $10,000</option>
-                      <option value="> $10k">&gt; $10,000</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Project Details
-                </label>
-                <div className="relative">
-                  <div className="absolute top-4 left-0 pl-4 flex items-start pointer-events-none text-gray-500">
-                    <FileText size={18} />
-                  </div>
-                  <textarea
-                    id="message"
-                    required
-                    rows={4}
-                    value={formData.message}
-                    onChange={(e) =>
-                      setFormData({ ...formData, message: e.target.value })
-                    }
-                    className="w-full bg-dark-bg border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all resize-none placeholder:text-gray-600"
-                    placeholder="Tell me about your project goals, timeline, and any specific requirements..."
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={status === "loading"}
-                className="w-full py-4 rounded-xl bg-accent text-dark-bg font-bold hover:bg-white transition-all flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(0,212,255,0.2)] hover:shadow-[0_0_30px_rgba(0,212,255,0.4)] mt-4"
-              >
-                {status === "loading" ? (
-                  <span className="animate-pulse flex items-center">
-                    <div className="w-5 h-5 border-2 border-dark-bg border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Sending Message...
-                  </span>
-                ) : (
-                  <>
-                    Send Message <Send size={18} className="ml-2" />
-                  </>
-                )}
-              </button>
-
-              {status === "success" && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="flex items-center text-success bg-success/10 p-4 rounded-xl border border-success/20 mt-4"
-                >
-                  <CheckCircle size={20} className="mr-3 flex-shrink-0" />
-                  <p className="text-sm font-medium">{responseMsg}</p>
-                </motion.div>
-              )}
-
-              {status === "error" && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="flex items-center text-red-400 bg-red-400/10 p-4 rounded-xl border border-red-400/20 mt-4"
-                >
-                  <AlertCircle size={20} className="mr-3 flex-shrink-0" />
-                  <p className="text-sm font-medium">{responseMsg}</p>
-                </motion.div>
-              )}
-            </form>
+                      <AlertCircle size={20} className="mr-3 flex-shrink-0" />
+                      <p className="text-sm font-medium">{responseMsg}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </form>
+            </div>
           </motion.div>
         </div>
       </div>
