@@ -18,9 +18,9 @@ async function startServer() {
   app.set("trust proxy", 1);
 
   // Connect to MongoDB
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://sudipro:sudipro9813%40%23%24@cluster0.h5be6xs.mongodb.net/portfolio?retryWrites=true&w=majority';
+  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://sudipro:GKYDxHZk7RjafRfm@sudipro.zrmfkwa.mongodb.net/?appName=sudipro';
   let isDbConnected = false;
-  
+
   try {
     await mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 3000, // Fail fast if no DB

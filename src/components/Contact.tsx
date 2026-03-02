@@ -97,7 +97,7 @@ export default function Contact() {
 
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
-          
+
           {/* Left Column: Info */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -110,12 +110,12 @@ export default function Contact() {
               <span className="w-2 h-2 rounded-full bg-accent mr-3 animate-pulse"></span>
               Available for work
             </div>
-            
+
             <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tighter leading-tight">
-              Let's build <br/>
+              Let's build <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-blue-500">together.</span>
             </h2>
-            
+
             <p className="text-gray-400 text-lg mb-12 max-w-md leading-relaxed">
               Ready to transform your ideas into a high-performance MERN application? Drop me a message and let's discuss your vision.
             </p>
@@ -126,7 +126,7 @@ export default function Contact() {
                 { icon: Phone, label: "WhatsApp", value: "+977 9813319831", href: "https://wa.me/9779813319831" },
                 { icon: MapPin, label: "Location", value: "Kathmandu, Nepal", href: null }
               ].map((item, i) => (
-                <motion.div 
+                <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -165,19 +165,19 @@ export default function Contact() {
             <div className="glass p-8 md:p-12 rounded-[2.5rem] border border-white/10 shadow-2xl relative overflow-hidden">
               {/* Decorative glow inside the card */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-[80px] pointer-events-none" />
-              
+
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 relative z-10" data-lenis-prevent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-6">
                   <div className="group relative">
                     <label htmlFor="name" className={labelClasses}>Full Name <span className="text-accent">*</span></label>
                     <div className="relative">
                       <div className={iconClasses}><User size={18} /></div>
-                      <input 
-                        type="text" 
-                        id="name" 
-                        {...register("name")} 
-                        className={`${inputClasses} ${errors.name ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400' : ''}`} 
-                        placeholder="John Doe" 
+                      <input
+                        type="text"
+                        id="name"
+                        {...register("name")}
+                        className={`${inputClasses} ${errors.name ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400' : ''}`}
+                        placeholder="Sudipro"
                       />
                     </div>
                     {errors.name && <span className={errorClasses}>{errors.name.message}</span>}
@@ -186,12 +186,12 @@ export default function Contact() {
                     <label htmlFor="email" className={labelClasses}>Email Address <span className="text-accent">*</span></label>
                     <div className="relative">
                       <div className={iconClasses}><Mail size={18} /></div>
-                      <input 
-                        type="email" 
-                        id="email" 
-                        {...register("email")} 
-                        className={`${inputClasses} ${errors.email ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400' : ''}`} 
-                        placeholder="john@example.com" 
+                      <input
+                        type="email"
+                        id="email"
+                        {...register("email")}
+                        className={`${inputClasses} ${errors.email ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400' : ''}`}
+                        placeholder="sudipro@gmail.com"
                       />
                     </div>
                     {errors.email && <span className={errorClasses}>{errors.email.message}</span>}
@@ -203,12 +203,12 @@ export default function Contact() {
                     <label htmlFor="whatsapp" className={labelClasses}>WhatsApp (Optional)</label>
                     <div className="relative">
                       <div className={iconClasses}><Phone size={18} /></div>
-                      <input 
-                        type="tel" 
-                        id="whatsapp" 
-                        {...register("whatsapp")} 
-                        className={inputClasses} 
-                        placeholder="+977 9813319831" 
+                      <input
+                        type="tel"
+                        id="whatsapp"
+                        {...register("whatsapp")}
+                        className={inputClasses}
+                        placeholder="+977 981331****"
                       />
                     </div>
                   </div>
@@ -216,15 +216,15 @@ export default function Contact() {
                     <label htmlFor="budget" className={labelClasses}>Budget Range</label>
                     <div className="relative">
                       <div className={iconClasses}><DollarSign size={18} /></div>
-                      <select 
-                        id="budget" 
-                        {...register("budget")} 
+                      <select
+                        id="budget"
+                        {...register("budget")}
                         className={`${inputClasses} appearance-none`}
                       >
-                        <option value="< $1k" className="bg-dark-surface">&lt; $1,000</option>
-                        <option value="$1k - $5k" className="bg-dark-surface">$1,000 - $5,000</option>
-                        <option value="$5k - $10k" className="bg-dark-surface">$5,000 - $10,000</option>
-                        <option value="> $10k" className="bg-dark-surface">&gt; $10,000</option>
+                        <option value="< $1k" className="bg-dark-surface">&lt; रु.10,000</option>
+                        <option value="$1k - $5k" className="bg-dark-surface">रु.25,0000 - रु.50,000</option>
+                        <option value="$5k - $10k" className="bg-dark-surface">रु.1,15,000 - रु.1,50,000</option>
+                        <option value="> $10k" className="bg-dark-surface">&gt; रु.3,00000</option>
                       </select>
                       <div className="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none text-gray-500 z-30">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -237,9 +237,9 @@ export default function Contact() {
                   <label htmlFor="projectType" className={labelClasses}>Project Type</label>
                   <div className="relative">
                     <div className={iconClasses}><Briefcase size={18} /></div>
-                    <select 
-                      id="projectType" 
-                      {...register("projectType")} 
+                    <select
+                      id="projectType"
+                      {...register("projectType")}
                       className={`${inputClasses} appearance-none`}
                     >
                       <option value="Fullstack" className="bg-dark-surface">Fullstack MERN Application</option>
@@ -259,12 +259,12 @@ export default function Contact() {
                     <div className="absolute top-4 left-0 pl-4 flex items-start pointer-events-none text-gray-500 group-focus-within:text-accent transition-colors z-30">
                       <FileText size={18} />
                     </div>
-                    <textarea 
-                      id="message" 
-                      {...register("message")} 
-                      rows={4} 
-                      className={`${inputClasses} resize-none ${errors.message ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400' : ''}`} 
-                      placeholder="Tell me about your goals, timeline, and specific requirements..." 
+                    <textarea
+                      id="message"
+                      {...register("message")}
+                      rows={4}
+                      className={`${inputClasses} resize-none ${errors.message ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400' : ''}`}
+                      placeholder="Tell me about your goals, timeline, and specific requirements..."
                     />
                   </div>
                   {errors.message && <span className={errorClasses}>{errors.message.message}</span>}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, ChangeEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, FileText, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 
@@ -7,21 +7,21 @@ export default function DemoPlayground() {
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<any>(null);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       setAnalyzing(true);
-      
+
       const reader = new FileReader();
       reader.onload = async (event) => {
         const base64Data = (event.target?.result as string).split(',')[1];
-        
+
         try {
           const res = await fetch('/api/demo/resume-analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               fileName: selectedFile.name,
               fileData: base64Data,
               mimeType: selectedFile.type
@@ -72,7 +72,7 @@ export default function DemoPlayground() {
               </div>
               <h3 className="text-2xl font-bold mb-2">AI Resume Analyzer</h3>
               <p className="text-gray-400 mb-8">Upload a PDF to test the ATS scoring algorithm.</p>
-              
+
               <label className="cursor-pointer px-8 py-4 rounded-full bg-accent text-dark-bg font-bold hover:bg-white transition-colors">
                 <span>Upload Resume (PDF)</span>
                 <input type="file" accept=".pdf" className="hidden" onChange={handleUpload} />
@@ -91,7 +91,7 @@ export default function DemoPlayground() {
               </div>
               <h3 className="text-2xl font-bold mb-2">Analysis Complete</h3>
               <p className="text-gray-400 mb-6">{file.name}</p>
-              <button 
+              <button
                 onClick={() => { setFile(null); setResult(null); }}
                 className="text-accent hover:underline text-sm"
               >
@@ -138,16 +138,16 @@ export default function DemoPlayground() {
                   ))}
                 </ul>
               </div>
-              
+
               <div className="pt-4 space-y-3">
-                <a 
-                  href="https://www.linkedin.com/feed/?shareActive=true&url=http%3A%2F%2Flocalhost%3A5174%2Fresume%2Fshare%2Fresume_1764766477706_5j5m4aoke&shareUrl=http%3A%2F%2Flocalhost%3A5174%2Fresume%2Fshare%2Fresume_1764766477706_5j5m4aoke&linkOrigin=LI_BADGE" 
-                  target="_blank" 
+                <a
+                  href="https://www.linkedin.com/feed/?shareActive=true&url=http%3A%2F%2Flocalhost%3A5174%2Fresume%2Fshare%2Fresume_1764766477706_5j5m4aoke&shareUrl=http%3A%2F%2Flocalhost%3A5174%2Fresume%2Fshare%2Fresume_1764766477706_5j5m4aoke&linkOrigin=LI_BADGE"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full py-4 text-center rounded-xl bg-[#0A66C2] text-white hover:bg-[#004182] transition-colors font-bold flex items-center justify-center"
                 >
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                   </svg>
                   Share Result on LinkedIn
                 </a>
