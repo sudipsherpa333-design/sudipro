@@ -8,12 +8,16 @@ import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from "url";
 
-// ❌ REMOVE .js extensions
 import adminRoutes from "./server/routes/admin";
 import publicRoutes from "./server/routes/public";
 
 dotenv.config();
+
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
@@ -21,16 +25,12 @@ async function startServer() {
 
   app.set("trust proxy", 1);
 
-  // ==========================
   // MongoDB Connection
-  // ==========================
   const MONGODB_URI = process.env.MONGODB_URI;
-
   if (!MONGODB_URI) {
     console.error("❌ MONGODB_URI not found in .env");
     process.exit(1);
   }
-
   try {
     await mongoose.connect(MONGODB_URI);
     console.log("✅ MongoDB Connected");
@@ -39,73 +39,37 @@ async function startServer() {
     process.exit(1);
   }
 
-  // ==========================
   // Middleware
-  // ==========================
-  app.use(
-    helmet({
-      contentSecurityPolicy: false,
-    })
-  );
-
-  app.use(
-    cors({
-      origin: true,
-      credentials: true,
-    })
-  );
-
+  app.use(helmet({ contentSecurityPolicy: false }));
+  app.use(cors({ origin: true, credentials: true }));
   app.use(express.json({ limit: "10mb" }));
   app.use(cookieParser());
 
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-  });
-
+  const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
   app.use("/api", limiter);
 
-  // ==========================
   // API Routes
-  // ==========================
   app.use("/api/admin", adminRoutes);
   app.use("/api", publicRoutes);
 
+  // Unknown API fallback
   app.use("/api", (req: Request, res: Response) => {
-    res.status(404).json({
-      success: false,
-      message: "API route not found",
-    });
+    res.status(404).json({ success: false, message: "API route not found" });
   });
 
-  app.use(
-    (
-      err: any,
-      req: Request,
-      res: Response,
-      next: NextFunction
-    ) => {
-      console.error("🔥 API Error:", err);
-      res.status(500).json({
-        success: false,
-        message: "Internal Server Error",
-      });
-    }
-  );
+  // Global Error Handler
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error("🔥 API Error:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  });
 
-  // ==========================
   // Frontend Handling
-  // ==========================
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-
+    const vite = await createViteServer({ server: { middlewareMode: true }, appType: "spa" });
     app.use(vite.middlewares);
   } else {
-    // server.ts - production path fix
-    const distPath = path.join(__dirname, "../dist"); // go up one level
+    // ✅ FIXED: point to correct frontend build
+    const distPath = path.join(__dirname, "../dist"); // go up from dist-server to root/dist
     app.use(express.static(distPath));
 
     app.get("*", (req: Request, res: Response) => {
@@ -113,9 +77,7 @@ async function startServer() {
     });
   }
 
-  // ==========================
   // Start Server
-  // ==========================
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
