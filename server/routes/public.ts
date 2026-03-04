@@ -77,21 +77,27 @@ router.get('/blogs/:slug', async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch blog" });
   }
 });
-
 router.post('/contact', async (req, res) => {
   try {
-    let contact;
-    try {
-      contact = new Contact(req.body);
-      await contact.save();
-    } catch (dbErr) {
-      console.warn("Failed to save contact to DB, but will proceed with email:", dbErr);
-      // Fallback to req.body if DB save fails so we still have the data for the email
-      contact = req.body;
+    // Validate required fields
+    const { name, email, message, whatsapp, projectType, budget } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({ success: false, message: "Name, email, and message are required." });
     }
 
+    // Save to DB
+    let contactRecord;
     try {
-      if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      contactRecord = new Contact({ name, email, message, whatsapp, projectType, budget });
+      await contactRecord.save();
+    } catch (dbErr) {
+      console.warn("Failed to save contact:", dbErr);
+      contactRecord = { name, email, message, whatsapp, projectType, budget }; // fallback
+    }
+
+    // Send Email
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      try {
         const transporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
           port: parseInt(process.env.SMTP_PORT || '587'),
@@ -105,30 +111,22 @@ router.post('/contact', async (req, res) => {
         await transporter.sendMail({
           from: `"Portfolio Contact" <${process.env.SMTP_USER}>`,
           to: process.env.EMAIL_TO || process.env.SMTP_USER,
-          subject: `New Contact from ${contact.name}`,
-          text: `Name: ${contact.name}\nEmail: ${contact.email}\nWhatsApp: ${contact.whatsapp || 'N/A'}\nProject Type: ${contact.projectType}\nBudget: ${contact.budget}\n\nMessage:\n${contact.message || ''}`,
-          html: `
-            <h3>New Contact Submission</h3>
-            <p><strong>Name:</strong> ${contact.name}</p>
-            <p><strong>Email:</strong> ${contact.email}</p>
-            <p><strong>WhatsApp:</strong> ${contact.whatsapp || 'N/A'}</p>
-            <p><strong>Project Type:</strong> ${contact.projectType}</p>
-            <p><strong>Budget:</strong> ${contact.budget}</p>
-            <p><strong>Message:</strong></p>
-            <p>${(contact.message || '').replace(/\n/g, '<br>')}</p>
-          `
+          subject: `New Contact from ${contactRecord.name}`,
+          text: `Name: ${contactRecord.name}\nEmail: ${contactRecord.email}\nWhatsApp: ${contactRecord.whatsapp || 'N/A'}\nProject Type: ${contactRecord.projectType}\nBudget: ${contactRecord.budget}\n\nMessage:\n${contactRecord.message}`,
         });
-        console.log("Email notification sent successfully.");
-      } else {
-        console.warn("SMTP credentials not provided. Email notification skipped.");
+        console.log("✅ Email sent successfully.");
+      } catch (emailErr) {
+        console.error("❌ Email sending failed:", emailErr);
       }
-    } catch (emailErr) {
-      console.error("Failed to send email notification:", emailErr);
+    } else {
+      console.warn("⚠️ SMTP credentials missing. Skipping email.");
     }
 
-    res.json({ success: true, message: "Thanks! I'll reply in 2 hours 🚀" });
+    // Always respond to frontend
+    return res.json({ success: true, message: "Thanks! I'll reply in 2 hours 🚀" });
   } catch (err) {
-    res.status(400).json({ success: false, message: 'Invalid data' });
+    console.error("🔥 /contact Error:", err);
+    return res.status(500).json({ success: false, message: "Failed to send message. Try again later." });
   }
 });
 
