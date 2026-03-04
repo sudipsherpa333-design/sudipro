@@ -104,13 +104,13 @@ async function startServer() {
 
     app.use(vite.middlewares);
   } else {
-// server.ts - production path fix
-const distPath = path.join(__dirname, "../dist"); // go up one level
-app.use(express.static(distPath));
+    // server.ts - production path fix
+    const distPath = path.join(__dirname, "../dist"); // go up one level
+    app.use(express.static(distPath));
 
-app.get("*", (req: Request, res: Response) => {
-  res.sendFile(path.join(distPath, "index.html"));
-});
+    app.get("*", (req: Request, res: Response) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
   }
 
   // ==========================
