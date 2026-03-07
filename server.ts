@@ -25,51 +25,68 @@ async function startServer() {
 
   app.set("trust proxy", 1);
 
-  // MongoDB Connection
+  // MongoDB
   const MONGODB_URI = process.env.MONGODB_URI;
+
   if (!MONGODB_URI) {
-    console.error("❌ MONGODB_URI not found in .env");
-    process.exit(1);
-  }
-  try {
-    await mongoose.connect(MONGODB_URI);
-    console.log("✅ MongoDB Connected");
-  } catch (err) {
-    console.error("❌ MongoDB Connection Failed:", err);
+    console.error("❌ MONGODB_URI missing");
     process.exit(1);
   }
 
-  // Middleware
+  try {
+    await mongoose.connect(MONGODB_URI);
+    console.log("✅ MongoDB Connected");
+  } catch (error) {
+    console.error("❌ MongoDB Error:", error);
+    process.exit(1);
+  }
+
+  // Security middleware
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(cors({ origin: true, credentials: true }));
   app.use(express.json({ limit: "10mb" }));
   app.use(cookieParser());
 
-  const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+  });
+
   app.use("/api", limiter);
 
-  // API Routes
+  // Routes
   app.use("/api/admin", adminRoutes);
   app.use("/api", publicRoutes);
 
-  // Unknown API fallback
+  // API 404
   app.use("/api", (req: Request, res: Response) => {
-    res.status(404).json({ success: false, message: "API route not found" });
+    res.status(404).json({
+      success: false,
+      message: "API route not found",
+    });
   });
 
-  // Global Error Handler
+  // Global error handler
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     console.error("🔥 API Error:", err);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   });
 
-  // Frontend Handling
+  // Frontend
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({ server: { middlewareMode: true }, appType: "spa" });
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+
     app.use(vite.middlewares);
   } else {
-    // ✅ FIXED: point to correct frontend build
-    const distPath = path.join(__dirname, "../dist"); // go up from dist-server to root/dist
+    const distPath = path.join(__dirname, "../dist");
+
     app.use(express.static(distPath));
 
     app.get("*", (req: Request, res: Response) => {
@@ -77,7 +94,6 @@ async function startServer() {
     });
   }
 
-  // Start Server
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
